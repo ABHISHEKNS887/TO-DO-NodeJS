@@ -126,4 +126,27 @@ const getCurrentUser = asyncHandler( async (req, res) => {
     .json(new ApiResponse(200, req.user, "User data fetched successfully"))
 })
 
-export { registerUser, loginUser, logoutUser, getCurrentUser}
+const changePassword = asyncHandler( async (req, res) => {
+    const { email, oldPassword, newPassword } = req.body;
+
+    if (!email || !oldPassword || !newPassword) throw new ApiError(401, "All fields are required")
+
+    if (oldPassword === newPassword) throw new ApiError(401, "Old and New Password must be not equal")
+
+    const user = await User.findOne({email})
+
+    if (!user) throw new ApiError(401, "Invalid Email")
+
+    const passwordCheck = await user.isPasswordCorrect(oldPassword)
+
+    if (!passwordCheck) throw new ApiError(401, "Given old password is incorrect")
+
+    user.password = newPassword;
+    await user.save({validateBeforeSave: true});
+
+    return res
+    .status(200)
+    .json(new ApiResponse(200, {}, "Password changed successfully"))
+    })
+
+export { registerUser, loginUser, logoutUser, getCurrentUser, changePassword}

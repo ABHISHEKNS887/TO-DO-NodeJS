@@ -15,7 +15,7 @@ const generateAccessAndRefreshToken = async (userId) => {
         const refreshToken = await user.generateRefreshToken();
         
         user.refreshToken = refreshToken;
-        await user.save({'validateBeforeSave': false});
+        await user.save({validateBeforeSave: false});
 
         return { accessToken, refreshToken }
     } catch (error) {
@@ -86,19 +86,38 @@ const loginUser = asyncHandler( async (req, res) => {
 
     if (!isPasswordValid) throw new ApiError(401, `Incorrect Password`)
 
-    const { accessToken, refreshToken } = generateAccessAndRefreshToken(existedUser._id);
+    const { accessToken, refreshToken } = await generateAccessAndRefreshToken(existedUser._id);
 
     const loggedInUser = await User.findById(existedUser._id).select("-password -refreshToken");
 
-    res
+    return res
     .status(200)
     .cookie("accessToken", accessToken, OPTIONS)
     .cookie("refreshToken", refreshToken, OPTIONS)
     .json(new ApiResponse(200,
-        {usaer: loggedInUser, accessToken, refreshToken},
+        {user: loggedInUser, accessToken, refreshToken},
         "User LoggedIn Successfully"
     ))
 
 })
 
-export { registerUser, loginUser }
+const logoutUser = asyncHandler( async (req, res) => {
+    await User.findByIdAndUpdate(
+        req.user._id,
+        {
+            $unset: {refreshToken: 1} // This will remove the filed from the document.
+        },
+        {
+            new: true // This will return the data after update.
+        }
+
+    )
+
+    return res.
+    status(200)
+    .clearCookie("accessToken", OPTIONS)
+    .clearCookie("refreshToken", OPTIONS)
+    .json(new ApiResponse(200, {}, "User logged out successfully"))
+})
+
+export { registerUser, loginUser, logoutUser}

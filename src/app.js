@@ -15,7 +15,10 @@ app.use(express.static('public')) // Storing the files.
 app.use(cookieParser());
 
 import userRouter from './routes/user.route.js';
+import todoRouter from './routes/todo.route.js';
 
 app.use('/api/v1/users/', userRouter);
+
+app.use('/api/v1/todo/', todoRouter);
 
 export {app}

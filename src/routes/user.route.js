@@ -12,6 +12,6 @@ router.route('/logout').post(verifyJwt, logoutUser);
 
 router.route('/getUser').get(verifyJwt, getCurrentUser);
 
-router.route('/changePassword').post(changePassword)
+router.route('/changePassword').patch(changePassword)
 
 export default router;

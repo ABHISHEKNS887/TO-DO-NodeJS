@@ -53,4 +53,55 @@ const getTodo = asyncHandler( async (req, res) => {
     .json(new ApiResponse(200, todo, "Todo fetched successfully"))
 })
 
-export { createTodo, getTodo }
+const updateTodo = asyncHandler( async(req, res) => {
+    const {todoId} = req.params;
+    const {content} = req.body;
+
+    checkObjectId(todoId)
+    
+    const contentData = await Todo.findById(todoId)
+
+    if (!contentData) throw new ApiError(401, "Invalid content id")
+    
+    if (contentData.createdBy !== req.user.email) throw new ApiError(401, "Invalid content id")
+
+    if (content?.trim() == "") throw new ApiError(401, "Content is required")
+    
+    const updateContent = await Todo.findByIdAndUpdate(
+        todoId,
+        {
+            $set: {content: content}
+        },
+        {
+            new: true
+        }
+    )
+
+    return res
+    .status(200)
+    .json(new ApiResponse(200, updateContent, "Content updated successfully"))
+
+})
+
+const deleteTodoById = asyncHandler( async(req, res) => {
+    const {todoId} = req.params;
+
+    if (!todoId) throw new ApiError(401, "TodoId is required")
+
+    checkObjectId(todoId)
+
+    const contentData = await Todo.findById(todoId)
+
+    if (!contentData) throw new ApiError(401, "Invalid content id")
+    
+    if (contentData.createdBy !== req.user.email) throw new ApiError(401, "Invalid content id")
+
+    await Todo.findByIdAndDelete(todoId)
+
+    return res
+    .status(200)
+    .json(new ApiResponse(200, {}, `Deleted Todo successfully. TodoId: ${todoId}`))
+
+})
+
+export { createTodo, getTodo, updateTodo, deleteTodoById }

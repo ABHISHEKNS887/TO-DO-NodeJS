@@ -3,7 +3,7 @@ import { User } from "../models/user.model.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiResponse } from "../utils/apiResponse.js";
 import { ApiError } from "../utils/apiError.js";
-import mongoose, {isValidObjectId} from "mongoose";
+import mongoose from "mongoose";
 
 const createTodo = asyncHandler( async(req, res) => {
     const {content} = req.body;
@@ -104,4 +104,34 @@ const deleteTodoById = asyncHandler( async(req, res) => {
 
 })
 
-export { createTodo, getTodo, updateTodo, deleteTodoById }
+const completeAndUncompleteTodo = asyncHandler( async(req, res) => {
+    const {todoId} = req.params;
+
+    if (!todoId) throw new ApiError(401, "TodoId is required")
+
+    checkObjectId(todoId)
+
+    const todoData = await Todo.findById(todoId)
+
+    if (!todoData) throw new ApiError(401, "Invalid content id")
+    
+    if (todoData.createdBy !== req.user.email) throw new ApiError(401, "Invalid content id")
+        
+    const updatedTodo = await Todo.findByIdAndUpdate(
+        todoId,
+        {
+            $set: {
+                complete: todoData.complete ? false : true
+            }
+        },
+        {
+            new: true
+        }
+    )
+
+    return res
+    .status(200)
+    .json(new ApiResponse(200, updatedTodo.complete, "Upadated Action successfully"))
+})
+
+export { createTodo, getTodo, updateTodo, deleteTodoById, completeAndUncompleteTodo }

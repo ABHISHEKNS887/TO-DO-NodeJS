@@ -1,5 +1,6 @@
 import { Todo } from "../models/todo.model.js";
 import { User } from "../models/user.model.js";
+import { SubTodo } from "../models/subTodo.model.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiResponse } from "../utils/apiResponse.js";
 import { ApiError } from "../utils/apiError.js";
@@ -103,6 +104,12 @@ const deleteTodoById = asyncHandler( async(req, res) => {
     
     if (contentData.createdBy !== req.user.email) throw new ApiError(401, "Invalid content id")
 
+    // Deleting all SubTodos
+    await SubTodo.deleteMany({
+        createdBy: todoId
+    })
+
+    // Deleting the Todo
     await Todo.findByIdAndDelete(todoId)
 
     return res

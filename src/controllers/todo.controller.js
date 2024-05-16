@@ -3,6 +3,7 @@ import { User } from "../models/user.model.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiResponse } from "../utils/apiResponse.js";
 import { ApiError } from "../utils/apiError.js";
+import { checkObjectId } from "../utils/commonFunctions.js"
 import mongoose from "mongoose";
 
 const createTodo = asyncHandler( async(req, res) => {
@@ -29,14 +30,6 @@ const createTodo = asyncHandler( async(req, res) => {
     
 })
 
-const checkObjectId = (objectId) => {
-    if (mongoose.isValidObjectId(objectId)) {
-    return true
-} else {
-  throw new ApiError(401, `Invalid ObjectId Id: ${objectId}`);
-}
-}
-
 const getTodo = asyncHandler( async (req, res) => {
     const {todoId} = req.params
 
@@ -44,13 +37,27 @@ const getTodo = asyncHandler( async (req, res) => {
     
     checkObjectId(todoId)
 
-    const todo = await Todo.findById(todoId)
+    const todo = await Todo.aggregate([
+        {
+            $match: {
+                _id : new mongoose.Types.ObjectId(todoId)
+            }
+        },
+        {
+            $lookup: {
+                from: "subtodos",
+                localField: "_id",
+                foreignField: "createdBy",
+                as: "subTodos"
+            }
+        }
+    ])
 
-    if (!todo) throw new ApiError(401, "Invalid Todo Id")
+    if (!todo?.length) throw new ApiError(404, "Todo not found")
 
     return res
     .status(200)
-    .json(new ApiResponse(200, todo, "Todo fetched successfully"))
+    .json(new ApiResponse(200, todo[0], "Todo fetched successfully"))
 })
 
 const updateTodo = asyncHandler( async(req, res) => {

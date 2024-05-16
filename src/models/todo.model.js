@@ -1,6 +1,6 @@
-import mongoose from "mongoose";
+import mongoose, {Schema} from "mongoose";
 
-const todoSchema = new mongoose.Schema(
+const todoSchema = new Schema(
     {
         "content": {
             type : String,
@@ -16,7 +16,7 @@ const todoSchema = new mongoose.Schema(
         },
         "subTodos": [
             {
-                type: mongoose.Schema.Types.ObjectId,
+                type: Schema.Types.ObjectId,
                 ref: "SubTodo"
             }
         ]
@@ -24,4 +24,4 @@ const todoSchema = new mongoose.Schema(
 , 
 {"timestamps": true})
 
-export const Todo = mongoose.model('todo', todoSchema);
+export const Todo = new mongoose.model('Todo', todoSchema);

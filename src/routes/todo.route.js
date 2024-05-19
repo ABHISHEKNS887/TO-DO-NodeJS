@@ -6,11 +6,10 @@ const router = Router();
 
 router.route("/createTodo").post(verifyJwt, createTodo);
 
-router.route("/:todoId").get(verifyJwt, getTodo);
-
-router.route("/:todoId/updateTodo").patch(verifyJwt, updateTodo);
-
-router.route("/:todoId/deleteTodo").delete(verifyJwt, deleteTodoById);
+router.route("/:todoId")
+.get(verifyJwt, getTodo)
+.patch(verifyJwt, updateTodo)
+.delete(verifyJwt, deleteTodoById);
 
 router.route("/:todoId/completeAndUncompleteTodo").patch(verifyJwt, completeAndUncompleteTodo)
 

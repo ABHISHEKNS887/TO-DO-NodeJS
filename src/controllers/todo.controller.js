@@ -4,7 +4,7 @@ import { SubTodo } from "../models/subTodo.model.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiResponse } from "../utils/apiResponse.js";
 import { ApiError } from "../utils/apiError.js";
-import { checkObjectId } from "../utils/commonFunctions.js"
+import { checkObjectId, validateObjectId } from "../utils/commonFunctions.js"
 import mongoose from "mongoose";
 
 const createTodo = asyncHandler( async(req, res) => {
@@ -54,6 +54,8 @@ const getTodo = asyncHandler( async (req, res) => {
         }
     ])
 
+    validateObjectId(todo?.[0], req)
+
     if (!todo?.length) throw new ApiError(404, "Todo not found")
 
     return res
@@ -71,7 +73,7 @@ const updateTodo = asyncHandler( async(req, res) => {
 
     if (!contentData) throw new ApiError(401, "Invalid content id")
     
-    if (contentData.createdBy !== req.user.email) throw new ApiError(401, "Invalid content id")
+    validateObjectId(contentData, req)
 
     if (content?.trim() == "") throw new ApiError(401, "Content is required")
     
@@ -102,7 +104,7 @@ const deleteTodoById = asyncHandler( async(req, res) => {
 
     if (!contentData) throw new ApiError(401, "Invalid content id")
     
-    if (contentData.createdBy !== req.user.email) throw new ApiError(401, "Invalid content id")
+    validateObjectId(contentData, req)
 
     // Deleting all SubTodos
     await SubTodo.deleteMany({
@@ -129,7 +131,7 @@ const completeAndUncompleteTodo = asyncHandler( async(req, res) => {
 
     if (!todoData) throw new ApiError(401, "Invalid content id")
     
-    if (todoData.createdBy !== req.user.email) throw new ApiError(401, "Invalid content id")
+    validateObjectId(todoData, req)
         
     const updatedTodo = await Todo.findByIdAndUpdate(
         todoId,

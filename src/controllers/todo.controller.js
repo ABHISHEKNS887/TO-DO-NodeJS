@@ -147,7 +147,7 @@ const completeAndUncompleteTodo = asyncHandler( async(req, res) => {
 
     return res
     .status(200)
-    .json(new ApiResponse(200, updatedTodo.complete, "Upadated Action successfully"))
+    .json(new ApiResponse(200, {complete: updatedTodo.complete}, "Upadated Action successfully"))
 })
 
 export { createTodo, getTodo, updateTodo, deleteTodoById, completeAndUncompleteTodo }

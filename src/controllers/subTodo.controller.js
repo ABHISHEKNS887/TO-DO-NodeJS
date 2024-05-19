@@ -79,15 +79,50 @@ const deleteSubTodo = asyncHandler( async(req, res) => {
 
     validateObjectId(todo, req)
 
-    await SubTodo.findByIdAndDelete(subTodoId)
-
     const subTodo = await SubTodo.findById(subTodoId)
 
     if (!subTodo) throw new ApiError(404, "subTodo not found")
+
+    await SubTodo.findByIdAndDelete(subTodoId)
 
     return res
     .status(200)
     .json(new ApiResponse(200, {}, `Delete SubTodo Successfully. SubTodoId: ${subTodoId}`))
 })
 
-export {createSubTodo, updatedSubTodo, deleteSubTodo}
+const completeAndUncompleteSubTodo = asyncHandler( async(req, res) => {
+    const { todoId, subTodoId } = req.params;
+
+    if (!todoId && !subTodoId) throw new ApiError(401, "Todo And SubTodo Ids are required")
+
+    checkObjectId(todoId);
+    checkObjectId(subTodoId);
+
+    const todo = await Todo.findById(todoId)
+
+    if (!todo) throw new ApiError(404, "Todo not found")
+
+    validateObjectId(todo, req)
+
+    const subTodo = await SubTodo.findById(subTodoId)
+
+    if (!subTodo) throw new ApiError(404, "subTodo not found")
+
+    const updatedSubTodo = await SubTodo.findByIdAndUpdate(
+        subTodoId,
+        {
+            $set: {
+                complete: subTodo.complete ? false : true
+            }
+        },
+        {
+            new: true
+        }
+    )
+
+    return res
+    .status(200)
+    .json(new ApiResponse(200, {complete: updatedSubTodo.complete}, "Upadated Action successfully"))
+})
+
+export {createSubTodo, updatedSubTodo, deleteSubTodo, completeAndUncompleteSubTodo}

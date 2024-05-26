@@ -1,11 +1,10 @@
 import { Todo } from "../models/todo.model.js";
-import { User } from "../models/user.model.js";
 import { SubTodo } from "../models/subTodo.model.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiResponse } from "../utils/apiResponse.js";
 import { ApiError } from "../utils/apiError.js";
 import { checkObjectId , validateObjectId} from "../utils/commonFunctions.js"
-import mongoose from "mongoose";
+import { redisClient } from "../index.js";
 
 const createSubTodo = asyncHandler( async(req, res) => {
     const { content } = req.body;
@@ -25,6 +24,8 @@ const createSubTodo = asyncHandler( async(req, res) => {
         content: content,
         createdBy: todoId
     })
+
+    await redisClient.del(todoId);
 
     return res
     .status(200)
@@ -60,6 +61,8 @@ const updatedSubTodo = asyncHandler( async (req, res) => {
         }
     )
 
+    await redisClient.del(todoId);
+
     return res
     .status(200)
     .json(new ApiResponse(200, udpateSubTodo, "Updated SubTodo successfully"))
@@ -84,6 +87,8 @@ const deleteSubTodo = asyncHandler( async(req, res) => {
     if (!subTodo) throw new ApiError(404, "subTodo not found")
 
     await SubTodo.findByIdAndDelete(subTodoId)
+
+    await redisClient.del(todoId);
 
     return res
     .status(200)
@@ -119,6 +124,8 @@ const completeAndUncompleteSubTodo = asyncHandler( async(req, res) => {
             new: true
         }
     )
+
+    await redisClient.del(todoId);
 
     return res
     .status(200)

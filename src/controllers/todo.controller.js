@@ -6,6 +6,7 @@ import { ApiResponse } from "../utils/apiResponse.js";
 import { ApiError } from "../utils/apiError.js";
 import { checkObjectId, validateObjectId } from "../utils/commonFunctions.js"
 import mongoose from "mongoose";
+import { redisClient } from "../index.js";
 
 const createTodo = asyncHandler( async(req, res) => {
     const {content} = req.body;
@@ -58,9 +59,17 @@ const getTodo = asyncHandler( async (req, res) => {
 
     if (!todo?.length) throw new ApiError(404, "Todo not found")
 
+    await redisClient.set(todoId, JSON.stringify(todo[0]), {
+      EX: 180,
+      NX: true,
+    });
+
     return res
     .status(200)
-    .json(new ApiResponse(200, todo[0], "Todo fetched successfully"))
+    .json(new ApiResponse(200, {
+        fromCache: false,
+        result: todo[0]
+    }, "Todo fetched successfully"))
 })
 
 const updateTodo = asyncHandler( async(req, res) => {
@@ -86,6 +95,7 @@ const updateTodo = asyncHandler( async(req, res) => {
             new: true
         }
     )
+    await redisClient.del(todoId);
 
     return res
     .status(200)
@@ -113,6 +123,8 @@ const deleteTodoById = asyncHandler( async(req, res) => {
 
     // Deleting the Todo
     await Todo.findByIdAndDelete(todoId)
+
+    await redisClient.del(todoId);
 
     return res
     .status(200)
@@ -144,6 +156,8 @@ const completeAndUncompleteTodo = asyncHandler( async(req, res) => {
             new: true
         }
     )
+
+    await redisClient.del(todoId);
 
     return res
     .status(200)
